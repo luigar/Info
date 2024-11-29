@@ -61,7 +61,6 @@ jobs:
           npm run test:smoke
           npm run test -- --suite login
           
-   
       - name: Run Full Test Suite
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
