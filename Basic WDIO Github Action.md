@@ -50,12 +50,30 @@ jobs:
       - run: node -v
       
       - run: npm install
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Smoke Tests
+        if: github.event_name == 'pull_request'
+        run: |
+          source .env
+          npm run test:smoke
+          npm run test -- --suite login
+          
    
       - name: Run Full Test Suite
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           source .env
           npm run wdio
+
+      - name: Archive Allure Results
+        if: always()  # Ensure this step runs even if previous steps fail
+        uses: actions/upload-artifact@v2
+        with:
+          name: allure-results
+          path: allure-results
 ```
 
 # Explanation of the Github Action step by step
@@ -149,7 +167,33 @@ jobs:
 
 ---
 
-#### 6. Run Test Suite
+#### 6. Run Linting
+```yaml
+- name: Run Lint
+  run: npm run lint
+```
+- Executes the linting process to check code quality.
+
+---
+
+#### 7. Run Smoke Tests
+```yaml
+- name: Run Smoke Tests
+  if: github.event_name == 'pull_request'
+  run: |
+    source .env
+    npm run test:smoke
+    npm run test -- --suite login
+```
+- **Conditional Execution**: Runs only for `pull_request` events.
+- Commands:
+  - `source .env`: Loads environment variables.
+  - `npm run test:smoke`: Runs VDR tests.
+  - `npm run test -- --suite login`: Runs smoke tests for the login suite.
+
+---
+
+#### 8. Run Test Suite
 ```yaml
 - name: Run Full Test Suite
   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -162,13 +206,27 @@ jobs:
   - The `master` branch.
 - Commands:
   - `source .env`: Loads environment variables.
-  - `npm run wdio`: Runs the WebdriverIO test suite.
+  - `npm run wdio`: Runs the WebdriverIO test suite
+
+---
+
+#### 9. Archive Allure Results
+```yaml
+- name: Archive Allure Results
+  if: always()  # Ensure this step runs even if previous steps fail
+  uses: actions/upload-artifact@v2
+  with:
+    name: allure-results
+    path: allure-results
+```
+- Archives the Allure results as a GitHub artifact for review.
+- **Conditional Execution**: Runs regardless of success or failure of previous steps.
 
 ---
 
 ## Summary
 This workflow ensures that:
-1. Code changes to the `master` branch (via push or pull request) automatically trigger CI.
+1. Code changes to the `master` branch or pull requests automatically trigger CI.
 2. It uses the Node.js version specified in `package.json` for consistency.
-3. Dependencies are installed, and the WebdriverIO test suite is executed to validate changes.
-
+3. Linting, smoke tests, and full test suites are executed based on the event type.
+4. Allure results are archived for further analysis.
