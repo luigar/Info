@@ -188,7 +188,7 @@ jobs:
 - **Conditional Execution**: Runs only for `pull_request` events.
 - Commands:
   - `source .env`: Loads environment variables.
-  - `npm run test:smoke`: Runs VDR tests.
+  - `npm run test:smoke`: Runs Smoke tests.
   - `npm run test -- --suite login`: Runs smoke tests for the login suite.
 
 ---
